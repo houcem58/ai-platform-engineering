@@ -1,0 +1,41 @@
+name: Docs Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required docs exist
+        run: |
+          required=(
+            "README.md"
+            "docs/01-team-structure.md"
+            "docs/02-ai-governance-framework.md"
+            "docs/03-mlops-platform-standards.md"
+            "docs/04-release-management.md"
+            "docs/05-project-portfolio.md"
+          )
+          for f in "${required[@]}"; do
+            [ -f "$f" ] || { echo "Missing: $f"; exit 1; }
+            echo "OK: $f"
+          done
+
+      - name: Check docs are non-empty
+        run: |
+          for f in docs/*.md; do
+            [ -s "$f" ] || { echo "Empty: $f"; exit 1; }
+            echo "OK: $f"
+          done
+
+      - name: Check ADRs exist
+        run: |
+          count=$(ls docs/adr/*.md 2>/dev/null | wc -l)
+          [ "$count" -ge 1 ] || { echo "No ADRs found in docs/adr/"; exit 1; }
+          echo "ADRs found: $count"
